@@ -1,3 +1,3 @@
-import {rememberMe} from './asyncStore';
+import {encryptedStorage, retrieveStorage} from './persistentHelper';
 
-export {rememberMe};
+export {encryptedStorage, retrieveStorage};

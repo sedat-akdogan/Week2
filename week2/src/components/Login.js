@@ -10,17 +10,29 @@ import styles from '../style/styles';
 import {COLORS, SIZES, icons} from '../constants';
 import {memo, useCallback, useEffect, useState} from 'react';
 
-// import {rememberMe} from '../helpers';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
+import {encryptedStorage} from '../helpers';
+import {useGetAEStorage} from '../hooks';
+import {useNavigation} from '@react-navigation/native';
+
+//TODO: Login component starts here
 const Login = () => {
+  const navigation = useNavigation();
+  const storageName = 'credentials';
   const [credentials, setCredentials] = useState({
     username: undefined,
     password: undefined,
   });
   const [persist, setPersist] = useState(false);
-  const [stored, setStored] = useState({});
-  const [loading, setIsLoading] = useState(true);
+
+  // function to retrieve
+  const {data, error, loading, getStorage} = useGetAEStorage(storageName); // Call the hook
+
+  const handleRetrieveClick = () => {
+    // Call the hook's function to retrieve data
+    getStorage();
+  };
 
   const handleTextChange = useCallback(
     (value, field) => {
@@ -29,48 +41,17 @@ const Login = () => {
     [credentials],
   );
 
-  const handleLogin = useCallback(() => {
-    setCredentials({});
-  }, []);
-
-  const storeUserSession = async () => {
+  const removeUserSession = async () => {
     try {
-      await EncryptedStorage.setItem(
-        'user_session',
-        JSON.stringify(credentials),
-      );
-      console.log('stored successfully');
-      // Congrats! You've just stored your first value!
+      await EncryptedStorage.removeItem(storageName);
+      // Congrats! You've just removed your first value!
     } catch (error) {
-      // There was an error on the native side
-    }
-  };
-
-  // Retrieving async data
-  const retrieveUserSession = async () => {
-    try {
-      const session = await EncryptedStorage.getItem('user_session');
-
-      if (session !== undefined) {
-        // Congrats! You've just retrieved your first value!
-        const sessionData = JSON.parse(session);
-
-        setStored(sessionData);
-        setIsLoading(false);
-      } else {
-        setIsLoading(false);
-      }
-
-      console.log('stored', stored);
-    } catch (error) {
-      // There was an error on the native side
-      console.error(error);
       setIsLoading(false);
+      // There was an error on the native side
     } finally {
-      setIsLoading(false);
     }
   };
-
+  console.log('login data', data);
   return (
     <View
       style={[
@@ -139,35 +120,22 @@ const Login = () => {
 
       {/* Action button section starts */}
       <View style={[styles.sectionView, {marginTop: SIZES.heroes}]}>
-        <TouchableOpacity onPress={() => storeUserSession()}>
+        {/* //TODO: handle login logic here */}
+        <TouchableOpacity
+          onPress={() => {
+            console.log('sign in');
+            navigation.navigate('Dashboard');
+            // encryptedStorage(storageName, credentials);
+          }}>
           <Text style={styles.textBtn}>Sign in</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgetPassword')}>
           <Text style={{textAlign: 'center', color: COLORS.b1}}>
             Forgot password?
           </Text>
         </TouchableOpacity>
       </View>
       {/* Action button section ends */}
-
-      <View>
-        <Text>Username</Text>
-        {!loading ? (
-          <Text
-            style={{
-              padding: 10,
-              fontSize: 30,
-              borderColor: COLORS.t1,
-              borderWidth: 1,
-              color: COLORS.t1,
-            }}>
-            {stored.username}
-          </Text>
-        ) : (
-          <Text>Loading username...</Text>
-        )}
-        <Button title="Get Stored" onPress={() => retrieveUserSession()} />
-      </View>
     </View>
   );
 };
